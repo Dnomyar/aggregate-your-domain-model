@@ -1,4 +1,4 @@
-# Comparison of two approaches to implementing and storing domain model
+# Comparison of two approaches to implement and store domain model
 
 The first approach is a classic "Database Driven Design". Code available here `without.aggregate.Main`.
 

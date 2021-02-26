@@ -7,8 +7,8 @@ ThisBuild / organizationName := "example"
 
 val circeVersion = "0.12.3"
 
-lazy val `with-aggregate-root` =
-  (project in file("with-aggregate-root"))
+lazy val `with-aggregate` =
+  (project in file("with-aggregate"))
     .settings(
       libraryDependencies ++= Seq(
         scalaTest % Test,
@@ -26,8 +26,8 @@ lazy val `with-aggregate-root` =
     )
 
 
-lazy val `without-aggregate-root` =
-  (project in file("without-aggregate-root"))
+lazy val `without-aggregate` =
+  (project in file("without-aggregate"))
     .settings(
       libraryDependencies ++= Seq(
         scalaTest % Test,
@@ -39,7 +39,7 @@ lazy val `without-aggregate-root` =
 
 
 lazy val root = (project in file("."))
-  .aggregate(`with-aggregate-root`, `without-aggregate-root`)
+  .aggregate(`with-aggregate`, `without-aggregate`)
 
 
 // See https://www.scala-sbt.org/1.x/docs/Using-Sonatype.html for instructions on how to publish to Sonatype.

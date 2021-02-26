@@ -1,4 +1,4 @@
-package without.aggregate.root
+package without.aggregate
 
 import scalikejdbc._
 
@@ -12,48 +12,20 @@ object Main {
 
     case class InvoiceLine(invoiceId: String, description: String, quantity: Double, unitPrice: Double)
 
-    trait GetInvoice {
+    trait Repository {
       def get(invoiceId: String): Option[(Invoice, List[InvoiceLine])]
-    }
 
-    trait SaveInvoice {
       def saveInvoice(invoice: Invoice): Unit
-    }
 
-    trait SaveInvoiceLine {
       def saveInvoiceLines(invoiceLines: List[InvoiceLine]): Unit
-    }
 
-    trait DeleteInvoiceLinesByInvoiceId {
       def deleteInvoiceLinesByInvoiceId(invoiceId: String): Unit
     }
 
-    object SQLRepositoryImplementation extends GetInvoice with SaveInvoice with SaveInvoiceLine with DeleteInvoiceLinesByInvoiceId {
-
-      Class.forName("org.h2.Driver")
-      ConnectionPool.singleton("jdbc:h2:mem:hello", "user", "pass")
-
-      private implicit val session = AutoSession
-
-      sql"""
-      create table invoices (
-        invoice_id varchar(100) not null primary key,
-        date timestamp not null
-      )""".execute.apply()
-
-      sql"""
-      create table invoice_lines (
-        index varchar(100) not null,
-        invoice_id varchar(100) not null,
-        description varchar(1000) not null,
-        quantity double not null,
-        unit_price double not null,
-        PRIMARY KEY(index, invoice_id)
-      )""".execute.apply()
-
+    object SQLRepositoryImplementation extends Repository with H2InvoiceInitialisation {
 
       override def get(invoiceId: String): Option[(Invoice, List[InvoiceLine])] = DB readOnly { implicit session =>
-        val rows =
+        val rows: List[((String, LocalDate), Int, InvoiceLine)] =
           sql"""select invoices.invoice_id, invoices.date, invoice_lines.index, invoice_lines.description, invoice_lines.quantity, invoice_lines.unit_price
               from invoices
               left join invoice_lines on invoices.invoice_id = invoice_lines.invoice_id
@@ -68,7 +40,7 @@ object Main {
               ((rs.string("invoice_id"), rs.localDate("date")), rs.int("index"), invoiceLine)
             }.list.apply()
 
-        if(rows.isEmpty) None
+        if (rows.isEmpty) None
         else {
           val (invoiceId, date) = rows.head._1
           Some((Invoice(invoiceId, date), rows.sortBy(_._2).map(_._3)))
